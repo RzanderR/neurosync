@@ -1,0 +1,38 @@
+export const MOCK_PROVIDERS = [
+  {
+    id: "chen-neurology",
+    name: "Dr. Sarah Chen",
+    specialty: "Neurology",
+    address: "Swedish Neuroscience Institute, 550 17th Ave, Seattle",
+    distanceMiles: 1.2,
+    acceptsTelehealth: true,
+    tbiNotes: "Quiet waiting area available",
+  },
+  {
+    id: "reed-pt",
+    name: "Dr. Marcus Reed",
+    specialty: "Physical Therapy",
+    address: "Reed PT Associates, 1402 NE 65th St, Seattle",
+    distanceMiles: 2.8,
+    acceptsTelehealth: false,
+    tbiNotes: "Low-stimulation treatment rooms",
+  },
+  {
+    id: "park-primarycare",
+    name: "Dr. Lila Park",
+    specialty: "Primary Care",
+    address: "Greenwood Family Health, 8523 Greenwood Ave N, Seattle",
+    distanceMiles: 3.4,
+    acceptsTelehealth: true,
+    tbiNotes: "Extended visit times for cognitive accessibility",
+  },
+  {
+    id: "okafor-speech",
+    name: "Dr. Amara Okafor",
+    specialty: "Speech Therapy",
+    address: "Bridgeway Speech & Cognitive Rehab, 1100 9th Ave, Seattle",
+    distanceMiles: 1.7,
+    acceptsTelehealth: true,
+    tbiNotes: "Specializes in post-TBI cognitive communication",
+  },
+];
