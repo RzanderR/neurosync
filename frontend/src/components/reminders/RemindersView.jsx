@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useAppState, useAppActions } from "../../state/store.jsx";
+import { useAppState } from "../../state/store.jsx";
 import AppointmentCard from "./AppointmentCard.jsx";
 import AppointmentDetail from "./AppointmentDetail.jsx";
 
@@ -13,9 +13,8 @@ function sortKey(a) {
   return new Date(a.updatedAt ?? 0).getTime();
 }
 
-export default function RemindersView() {
+export default function RemindersView({ compact = false }) {
   const { appointments } = useAppState();
-  const { setTab } = useAppActions();
   const [selectedId, setSelectedId] = useState(null);
 
   const upcoming = useMemo(() => {
@@ -27,31 +26,41 @@ export default function RemindersView() {
   const selected = upcoming.find((a) => a.id === selectedId) ?? null;
 
   return (
-    <section aria-labelledby="reminders-heading" className="space-y-6">
-      <div>
-        <h2 id="reminders-heading" className="m-0 text-3xl text-ink">
-          Your reminders
-        </h2>
-        <p className="m-0 mt-2 text-lg text-ink-secondary">
-          Upcoming appointments and the ones we're still arranging.
+    <section
+      aria-labelledby="reminders-heading"
+      className={compact ? "" : "space-y-6"}
+    >
+      <header className="flex items-baseline justify-between gap-4">
+        <div>
+          <h2
+            id="reminders-heading"
+            className={compact ? "m-0 text-2xl text-ink" : "m-0 text-3xl text-ink"}
+          >
+            Upcoming appointments
+          </h2>
+          <p className="m-0 mt-1 text-base text-ink-secondary">
+            Everything you've booked, and the ones we're still arranging.
+          </p>
+        </div>
+        <p className="m-0 text-sm text-ink-muted whitespace-nowrap">
+          {upcoming.length} active
         </p>
-      </div>
+      </header>
 
       {upcoming.length === 0 ? (
-        <div className="bg-surface border border-border-soft rounded-2xl p-10 text-center">
-          <p className="m-0 text-lg text-ink-secondary">
-            Nothing scheduled yet.
+        <div className="mt-4 bg-canvas border border-border-soft rounded-2xl p-8 text-center">
+          <p className="m-0 text-base text-ink-secondary">
+            Nothing scheduled yet. Use the chat below to book your first appointment.
           </p>
-          <button
-            type="button"
-            onClick={() => setTab("chat")}
-            className="mt-6 inline-flex items-center px-5 py-3 rounded-full bg-accent text-accent-on hover:bg-accent-hover transition-colors duration-200"
-          >
-            Book your first appointment
-          </button>
         </div>
       ) : (
-        <ul className="grid gap-6">
+        <ul
+          className={
+            compact
+              ? "mt-4 grid sm:grid-cols-2 gap-4"
+              : "grid gap-6"
+          }
+        >
           {upcoming.map((appointment) => (
             <li key={appointment.id}>
               <AppointmentCard
@@ -64,7 +73,10 @@ export default function RemindersView() {
       )}
 
       {selected && (
-        <AppointmentDetail appointment={selected} onClose={() => setSelectedId(null)} />
+        <AppointmentDetail
+          appointment={selected}
+          onClose={() => setSelectedId(null)}
+        />
       )}
     </section>
   );

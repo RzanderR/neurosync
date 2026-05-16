@@ -24,7 +24,7 @@ export default function AppointmentCard({ appointment, onSelect }) {
     <button
       type="button"
       onClick={() => onSelect(appointment)}
-      className="w-full text-left bg-surface border border-border-soft rounded-2xl p-8 transition-colors duration-200 hover:bg-subtle focus-visible:bg-subtle"
+      className="w-full text-left bg-canvas border border-border-soft rounded-2xl p-6 transition-colors duration-200 hover:bg-subtle focus-visible:bg-subtle"
     >
       <div className="flex items-start justify-between gap-6">
         <div>

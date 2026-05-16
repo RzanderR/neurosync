@@ -1,22 +1,14 @@
-import { CLINICS } from "../data/mockClinics.js";
+import { findClinicById } from "../data/mockClinics.js";
 
 export const STEPS = {
   START: "START",
-  IDLE: "IDLE",
-  PICK_TYPE: "PICK_TYPE",
-  PICK_CLINIC: "PICK_CLINIC",
+  DESCRIBING: "DESCRIBING",
+  CONFIRM_PROVIDER: "CONFIRM_PROVIDER",
   PICK_TIMEFRAME: "PICK_TIMEFRAME",
   CONFIRM: "CONFIRM",
   SUBMITTING: "SUBMITTING",
   DONE: "DONE",
 };
-
-const APPOINTMENT_TYPES = [
-  { label: "Neurology follow-up", specialty: "Neurology" },
-  { label: "Physical therapy initial evaluation", specialty: "Physical Therapy" },
-  { label: "Primary care visit", specialty: "Primary Care" },
-  { label: "Speech therapy session", specialty: "Speech Therapy" },
-];
 
 const TIMEFRAMES = [
   { label: "Next 2 weeks", value: "next 2 weeks" },
@@ -24,62 +16,37 @@ const TIMEFRAMES = [
   { label: "As soon as possible", value: "as soon as possible" },
 ];
 
-function clinicsForSpecialty(specialty, providers) {
-  const fromProviders = (providers ?? []).filter((p) => p.specialty === specialty);
-  if (fromProviders.length > 0) return fromProviders;
-  return CLINICS.filter((c) => c.specialty === specialty);
-}
+const EXAMPLE_PROMPTS = [
+  "I've been having post-concussion headaches.",
+  "My lower back has been hurting for weeks.",
+  "I keep losing my balance lately.",
+];
 
-export function getPrompt(step, context, providers) {
+export function getPrompt(step, context) {
   switch (step) {
     case STEPS.START:
       return {
-        text: "Want to book a new appointment? Take your time.",
-        chips: [
-          { label: "Yes, let's book one", value: "begin" },
-          { label: "Not right now", value: "not_now" },
-        ],
-        allowFreeText: false,
-      };
-
-    case STEPS.IDLE:
-      return {
-        text: "No problem. I'm here whenever you're ready.",
-        chips: [{ label: "Book an appointment", value: "begin" }],
-        allowFreeText: false,
-      };
-
-    case STEPS.PICK_TYPE:
-      return {
-        text: "What kind of appointment do you need?",
-        chips: APPOINTMENT_TYPES.map((t) => ({ label: t.label, value: t.label })),
-        allowFreeText: true,
-        freeTextPlaceholder: "Or type the kind of appointment...",
-      };
-
-    case STEPS.PICK_CLINIC: {
-      const specialty = APPOINTMENT_TYPES.find(
-        (t) => t.label === context.appointmentType
-      )?.specialty;
-      const candidates = specialty
-        ? clinicsForSpecialty(specialty, providers)
-        : CLINICS;
-      const chips =
-        candidates.length > 0
-          ? candidates.map((c) => ({
-              label: `${c.name} — ${c.specialty}`,
-              value: c.id,
-            }))
-          : CLINICS.map((c) => ({
-              label: `${c.name} — ${c.specialty}`,
-              value: c.id,
-            }));
-      return {
         text:
-          candidates.length > 0
-            ? "Here are providers who can help. Pick one when you're ready."
-            : "I don't have a matching provider on file, but you can pick from these.",
-        chips,
+          "Tell me what's going on in a sentence or two. I'll suggest a provider who fits.",
+        chips: EXAMPLE_PROMPTS.map((p) => ({ label: p, value: p })),
+        allowFreeText: true,
+        freeTextPlaceholder: "e.g., I get headaches that won't go away…",
+      };
+
+    case STEPS.DESCRIBING:
+      return { text: "", chips: [], allowFreeText: false };
+
+    case STEPS.CONFIRM_PROVIDER: {
+      const provider = findClinicById(context.clinicId);
+      return {
+        text: provider
+          ? "Sound good?"
+          : "I couldn't find a fit. Want to try again?",
+        chips: [
+          { label: "Yes, let's book", value: "confirm" },
+          { label: "Pick the other one", value: "swap" },
+          { label: "Start over", value: "restart" },
+        ],
         allowFreeText: false,
       };
     }
@@ -87,18 +54,21 @@ export function getPrompt(step, context, providers) {
     case STEPS.PICK_TIMEFRAME:
       return {
         text: "When would you like to be seen?",
-        chips: TIMEFRAMES.map((t) => ({ label: t.label, value: t.value })),
+        chips: TIMEFRAMES,
         allowFreeText: true,
-        freeTextPlaceholder: "Or type your preferred timeframe...",
+        freeTextPlaceholder: "Or type your preferred timeframe…",
       };
 
     case STEPS.CONFIRM: {
-      const clinic = CLINICS.find((c) => c.id === context.clinicId);
-      const clinicName = clinic?.name ?? "the provider";
+      const provider = findClinicById(context.clinicId);
+      const providerName = provider?.name ?? "the provider";
+      const apptType =
+        context.appointmentType ?? provider?.defaultAppointmentType ?? "an appointment";
+      const tf = context.preferredTimeframe
+        ? ` for ${context.preferredTimeframe}`
+        : "";
       return {
-        text:
-          `Ready to book "${context.appointmentType}" with ${clinicName}, ` +
-          `${context.preferredTimeframe ? `for ${context.preferredTimeframe}` : "in the coming weeks"}?`,
+        text: `Ready to book a ${apptType.toLowerCase()} with ${providerName}${tf}?`,
         chips: [
           { label: "Yes, book it", value: "submit" },
           { label: "Start over", value: "restart" },
@@ -108,11 +78,7 @@ export function getPrompt(step, context, providers) {
     }
 
     case STEPS.SUBMITTING:
-      return {
-        text: "Working on it...",
-        chips: [],
-        allowFreeText: false,
-      };
+      return { text: "", chips: [], allowFreeText: false };
 
     case STEPS.DONE:
       return {
@@ -126,10 +92,13 @@ export function getPrompt(step, context, providers) {
   }
 }
 
-export function findClinicChoice(value) {
-  return CLINICS.find((c) => c.id === value) ?? null;
+export function otherProviderId(currentId) {
+  return currentId === "chen-neurology" ? "reed-pt" : "chen-neurology";
 }
 
-export function findTypeBySpecialty(specialty) {
-  return APPOINTMENT_TYPES.find((t) => t.specialty === specialty)?.label ?? null;
+export function reasonForProvider(providerId) {
+  if (providerId === "chen-neurology") {
+    return "Dr. Chen's neurology practice handles post-TBI follow-up, headaches, and cognitive symptoms.";
+  }
+  return "Dr. Reed handles physical therapy with TBI-aware, low-stimulation treatment rooms.";
 }
