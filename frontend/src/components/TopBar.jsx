@@ -69,12 +69,12 @@ export default function TopBar() {
         </div>
 
         <div className="flex items-center gap-3">
-          {patient && <AccountMenu />}
           <MailIcon
             isInbox={isInbox}
             unreadCount={unreadCount}
             onClick={() => setView(isInbox ? "home" : "inbox")}
           />
+          {patient && <AccountMenu />}
         </div>
       </div>
     </header>
