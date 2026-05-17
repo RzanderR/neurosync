@@ -4,8 +4,8 @@ Four Lambdas, each exposed via a Lambda Function URL. No API Gateway. No DynamoD
 
 | Folder | Purpose | Calls Bedrock? | Frontend env var |
 |---|---|---|---|
-| `lambdas/recommend/` | Pick provider from free-text request | Yes | `VITE_RECOMMEND_URL` |
-| `lambdas/schedule/` | Return Path A booking or Path B email draft | No | `VITE_SCHEDULE_URL` |
+| `lambdas/recommend/` | Pick one of 6 providers (or null for out-of-scope requests) from free-text | Yes | `VITE_RECOMMEND_URL` |
+| `lambdas/schedule/` | Return Path A booking or Path B email draft (path is randomized per call) | No | `VITE_SCHEDULE_URL` |
 | `lambdas/register/` | Generate patient ID, echo profile | No | `VITE_REGISTER_URL` |
 | `lambdas/rewrite/` | TBI-friendly message rewrite | Yes | `VITE_REWRITE_URL` |
 
@@ -89,7 +89,7 @@ Save. The console gives you a URL like `https://abc123xyz.lambda-url.us-west-2.o
 **Test** tab → **Create new event** → name it `test`. Use the appropriate event body below. Click **Test**.
 
 <details>
-<summary>recommend test event</summary>
+<summary>recommend test event — neurology routing</summary>
 
 ```json
 {
@@ -98,7 +98,33 @@ Save. The console gives you a URL like `https://abc123xyz.lambda-url.us-west-2.o
 }
 ```
 
-Expected response body: `{"providerId":"chen-neurology","reasoning":"..."}`
+Expected response body: `{"providerId":"chen-neurology","reasoning":"...","alternates":["...","..."]}`
+</details>
+
+<details>
+<summary>recommend test event — speech routing</summary>
+
+```json
+{
+  "requestContext": { "http": { "method": "POST" } },
+  "body": "{\"patient\":{\"firstName\":\"Sam\"},\"request\":\"I'm having trouble finding the right words when I talk\"}"
+}
+```
+
+Expected response body: `{"providerId":"okafor-speech","reasoning":"...","alternates":[...]}`
+</details>
+
+<details>
+<summary>recommend test event — out-of-scope</summary>
+
+```json
+{
+  "requestContext": { "http": { "method": "POST" } },
+  "body": "{\"patient\":{\"firstName\":\"Sam\"},\"request\":\"I think I broke my arm — I need a cast\"}"
+}
+```
+
+Expected response body: `{"providerId":null,"reasoning":"NeuroSync doesn't cover that yet...","alternates":[]}`
 </details>
 
 <details>
@@ -111,7 +137,7 @@ Expected response body: `{"providerId":"chen-neurology","reasoning":"..."}`
 }
 ```
 
-Expected response body: `{"path":"A","appointment":{...,"status":"scheduled","confirmationCode":"NS-2026-..."}}`
+Expected response body: `{"path":"A","appointment":{...,"status":"scheduled","confirmationCode":"NS-2026-..."}}` **or** `{"path":"B","appointment":{...,"status":"in_progress","emailDraft":"..."}}` — path is randomized per call, so re-run the test a few times to see both branches.
 </details>
 
 <details>

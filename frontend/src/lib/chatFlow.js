@@ -4,6 +4,7 @@ export const STEPS = {
   START: "START",
   DESCRIBING: "DESCRIBING",
   CONFIRM_PROVIDER: "CONFIRM_PROVIDER",
+  NO_MATCH: "NO_MATCH",
   PICK_TIMEFRAME: "PICK_TIMEFRAME",
   CONFIRM: "CONFIRM",
   SUBMITTING: "SUBMITTING",
@@ -18,7 +19,7 @@ const TIMEFRAMES = [
 
 const EXAMPLE_PROMPTS = [
   "I've been having post-concussion headaches.",
-  "My lower back has been hurting for weeks.",
+  "I'm having trouble finding the right words when I talk.",
   "I keep losing my balance lately.",
 ];
 
@@ -38,18 +39,24 @@ export function getPrompt(step, context) {
 
     case STEPS.CONFIRM_PROVIDER: {
       const provider = findClinicById(context.clinicId);
+      const hasAlternates = (context.alternates ?? []).length > 0;
+      const chips = [{ label: "Yes, let's book", value: "confirm" }];
+      if (hasAlternates) chips.push({ label: "See other options", value: "see-other" });
+      chips.push({ label: "Start over", value: "restart" });
       return {
-        text: provider
-          ? "Sound good?"
-          : "I couldn't find a fit. Want to try again?",
-        chips: [
-          { label: "Yes, let's book", value: "confirm" },
-          { label: "Pick the other one", value: "swap" },
-          { label: "Start over", value: "restart" },
-        ],
+        text: provider ? "Sound good?" : "I couldn't find a fit. Want to try again?",
+        chips,
         allowFreeText: false,
       };
     }
+
+    case STEPS.NO_MATCH:
+      return {
+        text:
+          "I don't have a provider for that yet. We're adding more specialists soon. Want to try describing it differently?",
+        chips: [{ label: "Start over", value: "restart" }],
+        allowFreeText: false,
+      };
 
     case STEPS.PICK_TIMEFRAME:
       return {
@@ -90,15 +97,4 @@ export function getPrompt(step, context) {
     default:
       return { text: "", chips: [], allowFreeText: false };
   }
-}
-
-export function otherProviderId(currentId) {
-  return currentId === "chen-neurology" ? "reed-pt" : "chen-neurology";
-}
-
-export function reasonForProvider(providerId) {
-  if (providerId === "chen-neurology") {
-    return "Dr. Chen's neurology practice handles post-TBI follow-up, headaches, and cognitive symptoms.";
-  }
-  return "Dr. Reed handles physical therapy with TBI-aware, low-stimulation treatment rooms.";
 }

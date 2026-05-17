@@ -19,18 +19,19 @@ export function mockScheduleResponse(request) {
     throw err;
   }
 
+  const path = Math.random() < 0.5 ? "A" : "B";
   const now = new Date().toISOString();
   const baseAppointment = {
     id: nextId(),
     patientId: request.patient.id,
     clinic,
     appointmentType: request.appointmentType,
-    path: clinic.path,
+    path,
     createdAt: now,
     updatedAt: now,
   };
 
-  if (clinic.path === "A") {
+  if (path === "A") {
     return {
       path: "A",
       appointment: {

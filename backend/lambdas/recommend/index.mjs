@@ -10,19 +10,75 @@ const MODEL_ID =
 
 const bedrock = new BedrockRuntimeClient({ region: REGION });
 
-const SYSTEM_PROMPT = `You route NeuroSync patients to one of two providers. Both providers are TBI-aware.
+// Keep in sync with backend/lambdas/schedule/index.mjs and frontend/src/data/mockClinics.js.
+// All providers are TBI-aware.
+const PROVIDERS = [
+  {
+    id: "chen-neurology",
+    name: "Dr. Sarah Chen",
+    specialty: "Neurology",
+    bestFitFor:
+      "post-concussion symptoms, headaches, migraines, memory or cognitive complaints, dizziness, neurological follow-up",
+  },
+  {
+    id: "reed-pt",
+    name: "Dr. Marcus Reed",
+    specialty: "Physical Therapy",
+    bestFitFor:
+      "back / neck / shoulder / knee / hip pain, balance or vestibular issues, mobility, gait, post-injury physical rehabilitation",
+  },
+  {
+    id: "okafor-speech",
+    name: "Dr. Amara Okafor",
+    specialty: "Speech-Language Pathology",
+    bestFitFor:
+      "trouble speaking, slurred speech, finding words (aphasia), stuttering, swallowing problems (dysphagia), voice issues, communication after a TBI",
+  },
+  {
+    id: "tanaka-ot",
+    name: "Dr. Yuki Tanaka",
+    specialty: "Occupational Therapy",
+    bestFitFor:
+      "trouble with daily tasks (dressing, cooking, bathing, self-care), fine motor / hand coordination, writing, energy management and fatigue strategies",
+  },
+  {
+    id: "ortiz-mentalhealth",
+    name: "Dr. Mateo Ortiz",
+    specialty: "Mental Health (Psychiatry & Therapy)",
+    bestFitFor:
+      "anxiety, depression, low mood, panic, PTSD or trauma, insomnia and sleep problems, irritability, feeling overwhelmed",
+  },
+  {
+    id: "kim-primary",
+    name: "Dr. Jordan Kim",
+    specialty: "Primary Care",
+    bestFitFor:
+      "general checkups, annual physicals, medication refills, blood pressure, cold/flu/fever, fatigue, and anything that needs a primary care doctor first",
+  },
+];
 
-Provider A — id: "chen-neurology"
-  Dr. Sarah Chen, Neurology. Swedish Neuroscience Institute, Seattle.
-  Best fit when the patient mentions: post-concussion symptoms, headaches, migraines, memory or cognitive complaints, dizziness, neurological follow-up.
+const PROVIDER_IDS = new Set(PROVIDERS.map((p) => p.id));
 
-Provider B — id: "reed-pt"
-  Dr. Marcus Reed, Physical Therapy. Reed PT Associates, Seattle.
-  Best fit when the patient mentions: back / neck / shoulder pain, balance or vestibular issues, mobility, post-injury rehabilitation. Low-stimulation treatment rooms.
+function buildSystemPrompt() {
+  const providerLines = PROVIDERS.map(
+    (p, i) =>
+      `${i + 1}. id: "${p.id}" — ${p.name}, ${p.specialty}.\n   Best fit when the patient mentions: ${p.bestFitFor}.`
+  ).join("\n\n");
 
-Pick the single best provider for the patient's request. Return ONLY a JSON object — no markdown, no code fences, no commentary — matching this exact shape:
+  return `You route NeuroSync patients to one of the providers below. All providers are TBI-aware.
 
-{"providerId":"chen-neurology"|"reed-pt","reasoning":"<one short sentence written directly to the patient in plain, TBI-friendly language explaining the pick>"}`;
+${providerLines}
+
+Pick the single best provider for the patient's request. If the request is clearly outside what these providers handle (for example: dental, dermatology, orthopedic injuries like broken bones, vision/eye care, cardiology, OB/GYN), return providerId: null with a brief reasoning explaining that NeuroSync doesn't cover that yet but more specialists are being added.
+
+When you do pick a provider, also list up to 2 next-best alternates from the registry (ordered by relevance). Use only IDs from the list above. If there are no reasonable alternates, return an empty array.
+
+Return ONLY a JSON object — no markdown, no code fences, no commentary — matching this exact shape:
+
+{"providerId":"<id>"|null,"reasoning":"<one short sentence written directly to the patient in plain, TBI-friendly language>","alternates":["<id>", ...]}`;
+}
+
+const SYSTEM_PROMPT = buildSystemPrompt();
 
 const JSON_HEADERS = { "Content-Type": "application/json" };
 
@@ -84,7 +140,7 @@ export const handler = async (event) => {
       accept: "application/json",
       body: JSON.stringify({
         anthropic_version: "bedrock-2023-05-31",
-        max_tokens: 300,
+        max_tokens: 400,
         temperature: 0.2,
         system: SYSTEM_PROMPT,
         messages: [{ role: "user", content: userMessage }],
@@ -96,8 +152,7 @@ export const handler = async (event) => {
     const text = decoded?.content?.[0]?.text ?? "";
 
     const parsed = extractJson(text);
-    const validIds = new Set(["chen-neurology", "reed-pt"]);
-    if (!parsed || !validIds.has(parsed.providerId)) {
+    if (!parsed) {
       console.error("Unexpected model output:", text);
       return errorResponse(
         502,
@@ -106,12 +161,31 @@ export const handler = async (event) => {
       );
     }
 
+    const rawId = parsed.providerId;
+    const providerId =
+      rawId === null || rawId === undefined ? null : String(rawId);
+    if (providerId !== null && !PROVIDER_IDS.has(providerId)) {
+      console.error("Unknown providerId from model:", text);
+      return errorResponse(
+        502,
+        "MODEL_OUTPUT_INVALID",
+        "Model returned an unknown provider. Please try again."
+      );
+    }
+
+    const rawAlternates = Array.isArray(parsed.alternates) ? parsed.alternates : [];
+    const alternates = rawAlternates
+      .map((v) => (v == null ? "" : String(v)))
+      .filter((id) => PROVIDER_IDS.has(id) && id !== providerId)
+      .slice(0, 2);
+
     return {
       statusCode: 200,
       headers: JSON_HEADERS,
       body: JSON.stringify({
-        providerId: parsed.providerId,
+        providerId,
         reasoning: (parsed.reasoning ?? "").toString().slice(0, 400),
+        alternates: providerId === null ? [] : alternates,
       }),
     };
   } catch (err) {

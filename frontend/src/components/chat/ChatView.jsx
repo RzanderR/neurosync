@@ -4,11 +4,7 @@ import {
   scheduleAppointment,
   recommendProvider,
 } from "../../lib/api.js";
-import {
-  STEPS,
-  getPrompt,
-  otherProviderId,
-} from "../../lib/chatFlow.js";
+import { STEPS, getPrompt } from "../../lib/chatFlow.js";
 import { findClinicById } from "../../data/mockClinics.js";
 import { buildConfirmationMessage } from "../../data/mockMessages.js";
 import AssistantBubble from "./AssistantBubble.jsx";
@@ -52,11 +48,24 @@ export default function ChatView({ compact = false }) {
     actions.setChatStep(STEPS.DESCRIBING);
     pushAssistant("Thinking…");
     try {
-      const { providerId, reasoning } = await recommendProvider({
+      const { providerId, reasoning, alternates = [] } = await recommendProvider({
         patient,
         request: text,
       });
-      actions.setChatContext({ clinicId: providerId, requestText: text });
+      if (!providerId) {
+        pushAssistant(
+          reasoning ||
+            "I don't have a provider for that yet. We're adding more specialists soon."
+        );
+        actions.resetChatContext();
+        actions.setChatStep(STEPS.NO_MATCH);
+        return;
+      }
+      actions.setChatContext({
+        clinicId: providerId,
+        requestText: text,
+        alternates,
+      });
       pushAssistant(recommendationText(providerId, reasoning));
       pushAssistant("Sound good?");
       actions.setChatStep(STEPS.CONFIRM_PROVIDER);
@@ -140,13 +149,15 @@ export default function ChatView({ compact = false }) {
           }
           actions.setChatStep(STEPS.PICK_TIMEFRAME);
           pushAssistant("When would you like to be seen?");
-        } else if (value === "swap") {
-          const flippedId = otherProviderId(chatContext.clinicId);
-          actions.setChatContext({ clinicId: flippedId });
-          const flipped = findClinicById(flippedId);
-          if (flipped) {
+        } else if (value === "see-other") {
+          const alternates = chatContext.alternates ?? [];
+          if (alternates.length === 0) return;
+          const [nextId, ...rest] = alternates;
+          actions.setChatContext({ clinicId: nextId, alternates: rest });
+          const next = findClinicById(nextId);
+          if (next) {
             pushAssistant(
-              `Okay — switching to ${flipped.name} (${flipped.specialty}).`
+              `Okay — switching to ${next.name} (${next.specialty}).`
             );
             pushAssistant("Sound good?");
           }
@@ -157,6 +168,13 @@ export default function ChatView({ compact = false }) {
             "No problem. Tell me what's going on in a sentence or two."
           );
         }
+        return;
+      }
+
+      case STEPS.NO_MATCH: {
+        actions.resetChatContext();
+        actions.setChatStep(STEPS.START);
+        pushAssistant("Tell me what's going on in a sentence or two.");
         return;
       }
 

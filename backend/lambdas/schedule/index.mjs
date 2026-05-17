@@ -1,9 +1,10 @@
+// Keep in sync with backend/lambdas/recommend/index.mjs and frontend/src/data/mockClinics.js.
+// Path A (instant booking) vs Path B (email draft) is randomized per call.
 const CLINICS = {
   "chen-neurology": {
     id: "chen-neurology",
     name: "Dr. Sarah Chen",
     specialty: "Neurology",
-    path: "A",
     address: "Swedish Neuroscience Institute, 550 17th Ave, Seattle",
     phone: "206-555-0118",
     defaultAppointmentType: "Neurology follow-up",
@@ -12,10 +13,41 @@ const CLINICS = {
     id: "reed-pt",
     name: "Dr. Marcus Reed",
     specialty: "Physical Therapy",
-    path: "B",
     address: "Reed PT Associates, 1402 NE 65th St, Seattle",
     phone: "206-555-0144",
     defaultAppointmentType: "Physical therapy initial evaluation",
+  },
+  "okafor-speech": {
+    id: "okafor-speech",
+    name: "Dr. Amara Okafor",
+    specialty: "Speech-Language Pathology",
+    address: "Okafor Speech & Language Clinic, 2100 Westlake Ave, Seattle",
+    phone: "206-555-0166",
+    defaultAppointmentType: "Speech therapy evaluation",
+  },
+  "tanaka-ot": {
+    id: "tanaka-ot",
+    name: "Dr. Yuki Tanaka",
+    specialty: "Occupational Therapy",
+    address: "Tanaka OT Partners, 815 E Pine St, Seattle",
+    phone: "206-555-0177",
+    defaultAppointmentType: "Occupational therapy initial evaluation",
+  },
+  "ortiz-mentalhealth": {
+    id: "ortiz-mentalhealth",
+    name: "Dr. Mateo Ortiz",
+    specialty: "Mental Health (Psychiatry & Therapy)",
+    address: "Ortiz Behavioral Health, 600 Broadway, Seattle",
+    phone: "206-555-0188",
+    defaultAppointmentType: "Mental health consultation",
+  },
+  "kim-primary": {
+    id: "kim-primary",
+    name: "Dr. Jordan Kim",
+    specialty: "Primary Care",
+    address: "Kim Family Medicine, 1240 12th Ave, Seattle",
+    phone: "206-555-0199",
+    defaultAppointmentType: "Primary care visit",
   },
 };
 
@@ -60,18 +92,19 @@ export const handler = async (event) => {
   const appointmentType = body.appointmentType || clinic.defaultAppointmentType;
   const preferredTimeframe = body.preferredTimeframe || "";
   const now = new Date().toISOString();
+  const path = Math.random() < 0.5 ? "A" : "B";
 
   const baseAppointment = {
     id: newAppointmentId(),
     patientId: patient.id,
     clinic,
     appointmentType,
-    path: clinic.path,
+    path,
     createdAt: now,
     updatedAt: now,
   };
 
-  if (clinic.path === "A") {
+  if (path === "A") {
     return {
       statusCode: 200,
       headers: JSON_HEADERS,

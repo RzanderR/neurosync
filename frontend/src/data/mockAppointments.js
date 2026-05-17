@@ -1,7 +1,7 @@
-import { CLINICS } from "./mockClinics.js";
+import { findClinicById } from "./mockClinics.js";
 
-const chen = CLINICS.find((c) => c.id === "chen-neurology");
-const reed = CLINICS.find((c) => c.id === "reed-pt");
+const chen = findClinicById("chen-neurology");
+const reed = findClinicById("reed-pt");
 
 export const INITIAL_APPOINTMENTS = [
   {
