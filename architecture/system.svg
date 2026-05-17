@@ -1,0 +1,153 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 760" font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#475569"/>
+    </marker>
+    <marker id="arrow-dashed" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#94a3b8"/>
+    </marker>
+    <marker id="arrow-purple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#8b5cf6"/>
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#10b981"/>
+    </marker>
+  </defs>
+
+  <!-- Page title -->
+  <text x="500" y="24" text-anchor="middle" font-size="13" font-weight="700" fill="#334155">NeuroSync Health — System Architecture</text>
+
+  <!-- ============ BROWSER BAND ============ -->
+  <rect x="40" y="40" width="920" height="170" rx="14" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="60" y="62" font-size="13" font-weight="700" fill="#1d4ed8">Browser — React + Vite SPA</text>
+
+  <!-- UI cards -->
+  <g>
+    <rect x="60" y="80" width="160" height="110" rx="10" fill="#ffffff" stroke="#3b82f6"/>
+    <text x="140" y="108" text-anchor="middle" font-weight="600" fill="#1e293b" font-size="13">Account Modal</text>
+    <text x="140" y="132" text-anchor="middle" font-size="11" fill="#64748b">Identity ·</text>
+    <text x="140" y="148" text-anchor="middle" font-size="11" fill="#64748b">Accessibility ·</text>
+    <text x="140" y="164" text-anchor="middle" font-size="11" fill="#64748b">Insurance</text>
+
+    <rect x="232" y="80" width="160" height="110" rx="10" fill="#ffffff" stroke="#3b82f6"/>
+    <text x="312" y="108" text-anchor="middle" font-weight="600" fill="#1e293b" font-size="13">Schedule Chat</text>
+    <text x="312" y="132" text-anchor="middle" font-size="11" fill="#64748b">Symptoms → provider</text>
+    <text x="312" y="148" text-anchor="middle" font-size="11" fill="#64748b">→ confirmation</text>
+
+    <rect x="404" y="80" width="160" height="110" rx="10" fill="#ffffff" stroke="#3b82f6"/>
+    <text x="484" y="108" text-anchor="middle" font-weight="600" fill="#1e293b" font-size="13">Inbox</text>
+    <text x="484" y="132" text-anchor="middle" font-size="11" fill="#64748b">Plain-language</text>
+    <text x="484" y="148" text-anchor="middle" font-size="11" fill="#64748b">message rewrites</text>
+
+    <rect x="576" y="80" width="160" height="110" rx="10" fill="#ffffff" stroke="#3b82f6"/>
+    <text x="656" y="108" text-anchor="middle" font-weight="600" fill="#1e293b" font-size="13">Reminders / Todos</text>
+    <text x="656" y="132" text-anchor="middle" font-size="11" fill="#64748b">Upcoming appts +</text>
+    <text x="656" y="148" text-anchor="middle" font-size="11" fill="#64748b">extracted tasks</text>
+  </g>
+
+  <!-- localStorage cylinder -->
+  <g>
+    <rect x="770" y="90" width="160" height="90" fill="#dbeafe"/>
+    <ellipse cx="850" cy="180" rx="80" ry="10" fill="#dbeafe" stroke="#3b82f6"/>
+    <line x1="770" y1="90" x2="770" y2="180" stroke="#3b82f6"/>
+    <line x1="930" y1="90" x2="930" y2="180" stroke="#3b82f6"/>
+    <ellipse cx="850" cy="90" rx="80" ry="10" fill="#dbeafe" stroke="#3b82f6"/>
+    <text x="850" y="128" text-anchor="middle" font-weight="600" fill="#1e293b" font-size="13">localStorage</text>
+    <text x="850" y="150" text-anchor="middle" font-size="11" fill="#64748b">patient cache</text>
+  </g>
+
+  <!-- ============ COMPUTE BAND ============ -->
+  <rect x="40" y="250" width="920" height="220" rx="14" fill="#fff7ed" stroke="#f97316" stroke-width="1.5"/>
+  <text x="60" y="272" font-size="13" font-weight="700" fill="#c2410c">AWS Compute — Lambda × 4 (Node.js 22.x) behind public Function URLs</text>
+
+  <!-- Lambda cards -->
+  <g>
+    <rect x="80" y="300" width="180" height="130" rx="10" fill="#ffffff" stroke="#f97316"/>
+    <text x="170" y="328" text-anchor="middle" font-weight="700" font-size="14" fill="#1e293b">register</text>
+    <text x="170" y="346" text-anchor="middle" font-size="11" fill="#9a3412">Lambda · Function URL</text>
+    <line x1="100" y1="358" x2="240" y2="358" stroke="#fed7aa"/>
+    <text x="170" y="378" text-anchor="middle" font-size="11" fill="#64748b">Generates patientId,</text>
+    <text x="170" y="394" text-anchor="middle" font-size="11" fill="#64748b">echoes patient profile,</text>
+    <text x="170" y="410" text-anchor="middle" font-size="11" fill="#64748b">writes JSON to S3</text>
+
+    <rect x="290" y="300" width="180" height="130" rx="10" fill="#ffffff" stroke="#f97316"/>
+    <text x="380" y="328" text-anchor="middle" font-weight="700" font-size="14" fill="#1e293b">recommend</text>
+    <text x="380" y="346" text-anchor="middle" font-size="11" fill="#9a3412">Lambda · Function URL</text>
+    <line x1="310" y1="358" x2="450" y2="358" stroke="#fed7aa"/>
+    <text x="380" y="378" text-anchor="middle" font-size="11" fill="#64748b">Picks 1 of 12 providers</text>
+    <text x="380" y="394" text-anchor="middle" font-size="11" fill="#64748b">by insurance + zip,</text>
+    <text x="380" y="410" text-anchor="middle" font-size="11" fill="#64748b">routed via Bedrock</text>
+
+    <rect x="500" y="300" width="180" height="130" rx="10" fill="#ffffff" stroke="#f97316"/>
+    <text x="590" y="328" text-anchor="middle" font-weight="700" font-size="14" fill="#1e293b">schedule</text>
+    <text x="590" y="346" text-anchor="middle" font-size="11" fill="#9a3412">Lambda · Function URL</text>
+    <line x1="520" y1="358" x2="660" y2="358" stroke="#fed7aa"/>
+    <text x="590" y="378" text-anchor="middle" font-size="11" fill="#64748b">Returns Path A (instant</text>
+    <text x="590" y="394" text-anchor="middle" font-size="11" fill="#64748b">confirmation) or Path B</text>
+    <text x="590" y="410" text-anchor="middle" font-size="11" fill="#64748b">(email draft)</text>
+
+    <rect x="710" y="300" width="180" height="130" rx="10" fill="#ffffff" stroke="#f97316"/>
+    <text x="800" y="328" text-anchor="middle" font-weight="700" font-size="14" fill="#1e293b">rewrite</text>
+    <text x="800" y="346" text-anchor="middle" font-size="11" fill="#9a3412">Lambda · Function URL</text>
+    <line x1="730" y1="358" x2="870" y2="358" stroke="#fed7aa"/>
+    <text x="800" y="378" text-anchor="middle" font-size="11" fill="#64748b">Rewrites clinic messages</text>
+    <text x="800" y="394" text-anchor="middle" font-size="11" fill="#64748b">in TBI-friendly language</text>
+    <text x="800" y="410" text-anchor="middle" font-size="11" fill="#64748b">via Bedrock</text>
+  </g>
+
+  <!-- ============ SERVICES BAND ============ -->
+  <rect x="40" y="500" width="920" height="220" rx="14" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="60" y="522" font-size="13" font-weight="700" fill="#475569">Downstream Services</text>
+
+  <!-- S3 -->
+  <rect x="100" y="555" width="200" height="130" rx="10" fill="#ecfdf5" stroke="#10b981" stroke-width="1.5"/>
+  <text x="200" y="588" text-anchor="middle" font-weight="700" font-size="14" fill="#065f46">Amazon S3</text>
+  <text x="200" y="612" text-anchor="middle" font-size="11" fill="#475569">patients/{id}.json</text>
+  <text x="200" y="630" text-anchor="middle" font-size="11" fill="#475569">JSON patient records</text>
+  <text x="200" y="660" text-anchor="middle" font-size="10" fill="#64748b">s3:PutObject</text>
+
+  <!-- Bedrock -->
+  <rect x="400" y="555" width="200" height="130" rx="10" fill="#f5f3ff" stroke="#8b5cf6" stroke-width="1.5"/>
+  <text x="500" y="588" text-anchor="middle" font-weight="700" font-size="14" fill="#5b21b6">Amazon Bedrock</text>
+  <text x="500" y="612" text-anchor="middle" font-size="11" fill="#475569">Claude Haiku 4.5</text>
+  <text x="500" y="630" text-anchor="middle" font-size="11" fill="#475569">us.anthropic.claude-</text>
+  <text x="500" y="646" text-anchor="middle" font-size="11" fill="#475569">haiku-4-5-…</text>
+  <text x="500" y="672" text-anchor="middle" font-size="10" fill="#64748b">bedrock:InvokeModel</text>
+
+  <!-- CloudWatch -->
+  <rect x="700" y="555" width="200" height="130" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <text x="800" y="588" text-anchor="middle" font-weight="700" font-size="14" fill="#475569">CloudWatch Logs</text>
+  <text x="800" y="612" text-anchor="middle" font-size="11" fill="#64748b">Function logs from</text>
+  <text x="800" y="630" text-anchor="middle" font-size="11" fill="#64748b">all four Lambdas</text>
+
+  <!-- ============ ARROWS: Browser → Lambdas ============ -->
+  <g stroke="#475569" stroke-width="1.5" fill="none">
+    <line x1="140" y1="190" x2="170" y2="300" marker-end="url(#arrow)"/>
+    <line x1="312" y1="190" x2="380" y2="300" marker-end="url(#arrow)"/>
+    <line x1="312" y1="190" x2="590" y2="300" marker-end="url(#arrow)"/>
+    <line x1="484" y1="190" x2="800" y2="300" marker-end="url(#arrow)"/>
+  </g>
+
+  <!-- Protocol annotation -->
+  <text x="500" y="237" text-anchor="middle" font-size="11" fill="#475569" font-style="italic">HTTPS · JSON body</text>
+
+  <!-- ============ ARROWS: Lambdas → Services ============ -->
+  <g stroke-width="1.5" fill="none">
+    <line x1="170" y1="430" x2="200" y2="555" stroke="#10b981" marker-end="url(#arrow-green)"/>
+    <line x1="380" y1="430" x2="470" y2="555" stroke="#8b5cf6" marker-end="url(#arrow-purple)"/>
+    <line x1="800" y1="430" x2="540" y2="555" stroke="#8b5cf6" marker-end="url(#arrow-purple)"/>
+  </g>
+
+  <g font-size="10" fill="#475569">
+    <text x="125" y="490" text-anchor="middle">S3 PutObject</text>
+    <text x="350" y="490" text-anchor="middle">InvokeModel</text>
+    <text x="700" y="490" text-anchor="middle">InvokeModel</text>
+  </g>
+
+  <!-- schedule annotation -->
+  <text x="590" y="465" text-anchor="middle" font-size="11" font-style="italic" fill="#94a3b8">(pure logic — no downstream)</text>
+
+  <!-- CloudWatch dashed -->
+  <path d="M 920 440 Q 945 500 870 555" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5 4" fill="none" marker-end="url(#arrow-dashed)"/>
+  <text x="940" y="500" text-anchor="end" font-size="10" fill="#64748b">logs (all 4)</text>
+</svg>
