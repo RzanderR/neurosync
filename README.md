@@ -67,6 +67,7 @@ Scope cuts made deliberately to stay within hackathon time:
 - [frontend/](frontend/) — Vite + React 19 + Tailwind 4 
 - [backend/lambdas/](backend/lambdas/) — four standalone `index.mjs` Lambda handlers (recommend, schedule, register, rewrite).
 - [backend/DEPLOY.md](backend/DEPLOY.md) — per-Lambda AWS console deploy walkthrough, env vars, CORS, and IAM notes.
+- [FRONTEND.md](FRONTEND.md) — beginner-friendly walkthrough of the frontend code.
 
 ## Running the project
 
