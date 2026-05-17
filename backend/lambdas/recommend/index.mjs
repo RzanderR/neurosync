@@ -11,12 +11,26 @@ const MODEL_ID =
 const bedrock = new BedrockRuntimeClient({ region: REGION });
 
 // Keep in sync with backend/lambdas/schedule/index.mjs and frontend/src/data/mockClinics.js.
-// All providers are TBI-aware.
+// All providers are TBI-aware. acceptedInsurance values must match the
+// InsuranceStep dropdown options on the frontend.
 const PROVIDERS = [
   {
     id: "chen-neurology",
     name: "Dr. Sarah Chen",
     specialty: "Neurology",
+    neighborhood: "First Hill",
+    zip: "98122",
+    acceptedInsurance: ["Aetna", "Blue Cross Blue Shield", "Cigna", "UnitedHealthcare"],
+    bestFitFor:
+      "post-concussion symptoms, headaches, migraines, memory or cognitive complaints, dizziness, neurological follow-up",
+  },
+  {
+    id: "nguyen-neurology",
+    name: "Dr. Lan Nguyen",
+    specialty: "Neurology",
+    neighborhood: "Northgate",
+    zip: "98125",
+    acceptedInsurance: ["Anthem", "Humana", "Kaiser Permanente", "Medicare"],
     bestFitFor:
       "post-concussion symptoms, headaches, migraines, memory or cognitive complaints, dizziness, neurological follow-up",
   },
@@ -24,6 +38,19 @@ const PROVIDERS = [
     id: "reed-pt",
     name: "Dr. Marcus Reed",
     specialty: "Physical Therapy",
+    neighborhood: "Wallingford",
+    zip: "98103",
+    acceptedInsurance: ["Aetna", "Blue Cross Blue Shield", "Cigna", "UnitedHealthcare"],
+    bestFitFor:
+      "back / neck / shoulder / knee / hip pain, balance or vestibular issues, mobility, gait, post-injury physical rehabilitation",
+  },
+  {
+    id: "patel-pt",
+    name: "Dr. Priya Patel",
+    specialty: "Physical Therapy",
+    neighborhood: "West Seattle",
+    zip: "98116",
+    acceptedInsurance: ["Humana", "Medicare", "Medicaid", "TRICARE"],
     bestFitFor:
       "back / neck / shoulder / knee / hip pain, balance or vestibular issues, mobility, gait, post-injury physical rehabilitation",
   },
@@ -31,6 +58,19 @@ const PROVIDERS = [
     id: "okafor-speech",
     name: "Dr. Amara Okafor",
     specialty: "Speech-Language Pathology",
+    neighborhood: "South Lake Union",
+    zip: "98109",
+    acceptedInsurance: ["Aetna", "Blue Cross Blue Shield", "Cigna", "Medicare"],
+    bestFitFor:
+      "trouble speaking, slurred speech, finding words (aphasia), stuttering, swallowing problems (dysphagia), voice issues, communication after a TBI",
+  },
+  {
+    id: "lin-speech",
+    name: "Dr. Wei Lin",
+    specialty: "Speech-Language Pathology",
+    neighborhood: "Ballard",
+    zip: "98117",
+    acceptedInsurance: ["Anthem", "Humana", "Kaiser Permanente", "UnitedHealthcare"],
     bestFitFor:
       "trouble speaking, slurred speech, finding words (aphasia), stuttering, swallowing problems (dysphagia), voice issues, communication after a TBI",
   },
@@ -38,6 +78,19 @@ const PROVIDERS = [
     id: "tanaka-ot",
     name: "Dr. Yuki Tanaka",
     specialty: "Occupational Therapy",
+    neighborhood: "Capitol Hill",
+    zip: "98122",
+    acceptedInsurance: ["Aetna", "Blue Cross Blue Shield", "Cigna", "UnitedHealthcare"],
+    bestFitFor:
+      "trouble with daily tasks (dressing, cooking, bathing, self-care), fine motor / hand coordination, writing, energy management and fatigue strategies",
+  },
+  {
+    id: "brooks-ot",
+    name: "Dr. Elena Brooks",
+    specialty: "Occupational Therapy",
+    neighborhood: "Beacon Hill",
+    zip: "98144",
+    acceptedInsurance: ["Anthem", "Medicare", "Medicaid", "TRICARE"],
     bestFitFor:
       "trouble with daily tasks (dressing, cooking, bathing, self-care), fine motor / hand coordination, writing, energy management and fatigue strategies",
   },
@@ -45,6 +98,19 @@ const PROVIDERS = [
     id: "ortiz-mentalhealth",
     name: "Dr. Mateo Ortiz",
     specialty: "Mental Health (Psychiatry & Therapy)",
+    neighborhood: "First Hill",
+    zip: "98104",
+    acceptedInsurance: ["Aetna", "Anthem", "Blue Cross Blue Shield", "Cigna"],
+    bestFitFor:
+      "anxiety, depression, low mood, panic, PTSD or trauma, insomnia and sleep problems, irritability, feeling overwhelmed",
+  },
+  {
+    id: "wong-mentalhealth",
+    name: "Dr. Hannah Wong",
+    specialty: "Mental Health (Psychiatry & Therapy)",
+    neighborhood: "Fremont",
+    zip: "98103",
+    acceptedInsurance: ["Humana", "Kaiser Permanente", "TRICARE", "UnitedHealthcare"],
     bestFitFor:
       "anxiety, depression, low mood, panic, PTSD or trauma, insomnia and sleep problems, irritability, feeling overwhelmed",
   },
@@ -52,6 +118,19 @@ const PROVIDERS = [
     id: "kim-primary",
     name: "Dr. Jordan Kim",
     specialty: "Primary Care",
+    neighborhood: "Capitol Hill",
+    zip: "98122",
+    acceptedInsurance: ["Aetna", "Blue Cross Blue Shield", "Cigna", "Humana", "UnitedHealthcare"],
+    bestFitFor:
+      "general checkups, annual physicals, medication refills, blood pressure, cold/flu/fever, fatigue, and anything that needs a primary care doctor first",
+  },
+  {
+    id: "sato-primary",
+    name: "Dr. Riku Sato",
+    specialty: "Primary Care",
+    neighborhood: "Greenwood",
+    zip: "98103",
+    acceptedInsurance: ["Anthem", "Kaiser Permanente", "Medicare", "Medicaid", "TRICARE"],
     bestFitFor:
       "general checkups, annual physicals, medication refills, blood pressure, cold/flu/fever, fatigue, and anything that needs a primary care doctor first",
   },
@@ -62,20 +141,26 @@ const PROVIDER_IDS = new Set(PROVIDERS.map((p) => p.id));
 function buildSystemPrompt() {
   const providerLines = PROVIDERS.map(
     (p, i) =>
-      `${i + 1}. id: "${p.id}" — ${p.name}, ${p.specialty}.\n   Best fit when the patient mentions: ${p.bestFitFor}.`
+      `${i + 1}. id: "${p.id}" — ${p.name}, ${p.specialty}. ${p.neighborhood} (${p.zip}). Accepts: ${p.acceptedInsurance.join(", ")}.\n   Best fit when the patient mentions: ${p.bestFitFor}.`
   ).join("\n\n");
 
   return `You route NeuroSync patients to one of the providers below. All providers are TBI-aware.
 
 ${providerLines}
 
-Pick the single best provider for the patient's request. If the request is clearly outside what these providers handle (for example: dental, dermatology, orthopedic injuries like broken bones, vision/eye care, cardiology, OB/GYN), return providerId: null with a brief reasoning explaining that NeuroSync doesn't cover that yet but more specialists are being added.
+Matching rules (apply in order):
 
-When you do pick a provider, also list up to 2 next-best alternates from the registry (ordered by relevance). Use only IDs from the list above. If there are no reasonable alternates, return an empty array.
+1. Narrow to providers whose specialty fits the patient's request.
+2. Among those, prefer providers whose "Accepts" list includes the patient's insurance plan (the patient's plan, if known, is included in the user message).
+3. If no specialty-matching provider accepts the patient's insurance, pick the same-specialty provider whose neighborhood/zip is geographically closest to the patient (the patient's zip and city are in the user message when available). In the "reasoning" string, plainly say the insurance plan isn't accepted and the patient should verify coverage with the clinic.
+4. If the patient's insurance is "No insurance / Self-pay", "Other", or missing, skip rule 2 and pick on specialty + location only. The reasoning string should be neutral on insurance.
+5. If no provider in the registry has a specialty that fits the request at all (for example: dental, dermatology, orthopedic injuries like broken bones, vision/eye care, OB/GYN), return providerId: null with reasoning like "We don't have a provider for that yet — we're working on adding more soon."
+
+Also list up to 2 next-best alternates from the registry, ordered by relevance. Use only IDs from the list above. If there are no reasonable alternates, return an empty array. The alternates list must be empty when providerId is null.
 
 Return ONLY a JSON object — no markdown, no code fences, no commentary — matching this exact shape:
 
-{"providerId":"<id>"|null,"reasoning":"<one short sentence written directly to the patient in plain, TBI-friendly language>","alternates":["<id>", ...]}`;
+{"providerId":"<id>"|null,"reasoning":"<one or two short, TBI-friendly sentences written directly to the patient>","alternates":["<id>", ...]}`;
 }
 
 const SYSTEM_PROMPT = buildSystemPrompt();
@@ -126,6 +211,10 @@ export const handler = async (event) => {
   const userMessage = [
     `Patient request: ${request}`,
     patient.firstName ? `Patient first name: ${patient.firstName}` : null,
+    patient.insurance ? `Patient insurance plan: ${patient.insurance}` : null,
+    patient.zip ? `Patient zip: ${patient.zip}` : null,
+    patient.city ? `Patient city: ${patient.city}` : null,
+    patient.state ? `Patient state: ${patient.state}` : null,
     patient.accessibilityNotes
       ? `Accessibility notes: ${patient.accessibilityNotes}`
       : null,
@@ -140,7 +229,7 @@ export const handler = async (event) => {
       accept: "application/json",
       body: JSON.stringify({
         anthropic_version: "bedrock-2023-05-31",
-        max_tokens: 400,
+        max_tokens: 500,
         temperature: 0.2,
         system: SYSTEM_PROMPT,
         messages: [{ role: "user", content: userMessage }],
@@ -184,7 +273,7 @@ export const handler = async (event) => {
       headers: JSON_HEADERS,
       body: JSON.stringify({
         providerId,
-        reasoning: (parsed.reasoning ?? "").toString().slice(0, 400),
+        reasoning: (parsed.reasoning ?? "").toString().slice(0, 500),
         alternates: providerId === null ? [] : alternates,
       }),
     };

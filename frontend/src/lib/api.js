@@ -55,7 +55,7 @@ export async function registerPatient(patient) {
 export async function recommendProvider({ patient, request }) {
   if (SHOULD_MOCK_RECOMMEND) {
     await simulateLatency(900);
-    return pickProvider(request);
+    return pickProvider(request, patient);
   }
   return postJson(RECOMMEND_URL, { patient, request });
 }

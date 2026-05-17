@@ -60,7 +60,7 @@ export default function TopBar() {
 
   return (
     <header className="border-b border-border-soft bg-surface">
-      <div className="mx-auto max-w-6xl px-6 py-4 flex items-center justify-between gap-4">
+      <div className="mx-auto max-w-7xl px-6 py-4 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <span aria-hidden="true" className="inline-block h-3 w-3 rounded-full bg-accent" />
           <h1 className="m-0 text-2xl font-semibold tracking-tight text-ink">

@@ -11,7 +11,7 @@ function AppBody() {
   return (
     <div className="min-h-svh bg-canvas">
       {showApp && <TopBar />}
-      <main className="mx-auto max-w-6xl px-6 py-8">
+      <main className="mx-auto max-w-7xl px-6 py-8">
         {showApp ? (
           view === "inbox" ? <InboxView /> : <HomeView />
         ) : (

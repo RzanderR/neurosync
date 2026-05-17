@@ -5,21 +5,16 @@ const TIME_OPTIONS = [
   { value: "no_preference", label: "No preference" },
 ];
 
-function Toggle({ checked, onChange, label, description }) {
+function Toggle({ checked, onChange, label }) {
   return (
-    <label className="flex items-start gap-4 p-4 rounded-xl border border-border-soft bg-canvas cursor-pointer hover:bg-subtle transition-colors duration-200">
+    <label className="flex items-center gap-3 p-3 rounded-xl border border-border-soft bg-canvas cursor-pointer hover:bg-subtle transition-colors duration-200">
       <input
         type="checkbox"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
-        className="mt-1 h-5 w-5 accent-accent"
+        className="h-5 w-5 accent-accent"
       />
-      <span className="flex-1">
-        <span className="block text-base text-ink">{label}</span>
-        {description && (
-          <span className="block mt-1 text-sm text-ink-secondary">{description}</span>
-        )}
-      </span>
+      <span className="text-base text-ink">{label}</span>
     </label>
   );
 }
@@ -31,39 +26,32 @@ export default function AccessibilityStep({ values, onChange }) {
 
   return (
     <div className="space-y-5">
-      <p className="m-0 text-base text-ink-secondary">
-        These help us tailor how clinics communicate with you. You can change them later.
-      </p>
-
-      <div className="space-y-3">
+      <div className="grid sm:grid-cols-2 gap-3">
         <Toggle
           checked={values.writtenCommunicationOnly}
           onChange={(v) => setKey("writtenCommunicationOnly", v)}
-          label="Written communication only"
-          description="Clinics will be asked to email, not call."
+          label="Email only — no phone calls"
         />
         <Toggle
           checked={values.lowStimulationRequested}
           onChange={(v) => setKey("lowStimulationRequested", v)}
-          label="Low-stimulation environment requested"
-          description="We'll note this when scheduling — quiet waiting areas, dim lighting."
+          label="Low-stimulation environment"
         />
         <Toggle
           checked={values.supportPersonAttending}
           onChange={(v) => setKey("supportPersonAttending", v)}
-          label="A support person will attend appointments"
+          label="Bringing a support person"
         />
         <Toggle
           checked={values.transportationConstraint}
           onChange={(v) => setKey("transportationConstraint", v)}
-          label="I have transportation constraints"
-          description="We'll prefer telehealth where possible."
+          label="Transportation constraints"
         />
       </div>
 
       <fieldset>
         <legend className="text-sm uppercase tracking-wide text-ink-muted">
-          Preferred time of day
+          Preferred time
         </legend>
         <div className="mt-2 flex flex-wrap gap-2">
           {TIME_OPTIONS.map((opt) => {
@@ -91,10 +79,10 @@ export default function AccessibilityStep({ values, onChange }) {
       <label className="block">
         <span className="text-sm uppercase tracking-wide text-ink-muted">Notes (optional)</span>
         <textarea
-          rows={3}
+          rows={2}
           value={values.notes}
           onChange={(e) => setKey("notes", e.target.value)}
-          placeholder="e.g., 'Loud waiting rooms trigger headaches lasting 24+ hours.'"
+          placeholder="e.g., Loud rooms trigger long headaches."
           className="mt-1 w-full px-4 py-3 rounded-xl bg-canvas border border-border-strong text-ink resize-none"
         />
       </label>

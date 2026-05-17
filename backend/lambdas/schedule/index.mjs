@@ -1,5 +1,6 @@
 // Keep in sync with backend/lambdas/recommend/index.mjs and frontend/src/data/mockClinics.js.
 // Path A (instant booking) vs Path B (email draft) is randomized per call.
+// Insurance is not used here — it only drives recommendation, not scheduling.
 const CLINICS = {
   "chen-neurology": {
     id: "chen-neurology",
@@ -7,6 +8,14 @@ const CLINICS = {
     specialty: "Neurology",
     address: "Swedish Neuroscience Institute, 550 17th Ave, Seattle",
     phone: "206-555-0118",
+    defaultAppointmentType: "Neurology follow-up",
+  },
+  "nguyen-neurology": {
+    id: "nguyen-neurology",
+    name: "Dr. Lan Nguyen",
+    specialty: "Neurology",
+    address: "Northgate Neurology Center, 11000 Roosevelt Way NE, Seattle",
+    phone: "206-555-0211",
     defaultAppointmentType: "Neurology follow-up",
   },
   "reed-pt": {
@@ -17,12 +26,28 @@ const CLINICS = {
     phone: "206-555-0144",
     defaultAppointmentType: "Physical therapy initial evaluation",
   },
+  "patel-pt": {
+    id: "patel-pt",
+    name: "Dr. Priya Patel",
+    specialty: "Physical Therapy",
+    address: "Alki Movement Therapy, 4100 SW Alaska St, Seattle",
+    phone: "206-555-0222",
+    defaultAppointmentType: "Physical therapy initial evaluation",
+  },
   "okafor-speech": {
     id: "okafor-speech",
     name: "Dr. Amara Okafor",
     specialty: "Speech-Language Pathology",
     address: "Okafor Speech & Language Clinic, 2100 Westlake Ave, Seattle",
     phone: "206-555-0166",
+    defaultAppointmentType: "Speech therapy evaluation",
+  },
+  "lin-speech": {
+    id: "lin-speech",
+    name: "Dr. Wei Lin",
+    specialty: "Speech-Language Pathology",
+    address: "Ballard Voice & Speech Center, 5505 24th Ave NW, Seattle",
+    phone: "206-555-0233",
     defaultAppointmentType: "Speech therapy evaluation",
   },
   "tanaka-ot": {
@@ -33,6 +58,14 @@ const CLINICS = {
     phone: "206-555-0177",
     defaultAppointmentType: "Occupational therapy initial evaluation",
   },
+  "brooks-ot": {
+    id: "brooks-ot",
+    name: "Dr. Elena Brooks",
+    specialty: "Occupational Therapy",
+    address: "Beacon Hill OT Studio, 2900 Beacon Ave S, Seattle",
+    phone: "206-555-0244",
+    defaultAppointmentType: "Occupational therapy initial evaluation",
+  },
   "ortiz-mentalhealth": {
     id: "ortiz-mentalhealth",
     name: "Dr. Mateo Ortiz",
@@ -41,12 +74,28 @@ const CLINICS = {
     phone: "206-555-0188",
     defaultAppointmentType: "Mental health consultation",
   },
+  "wong-mentalhealth": {
+    id: "wong-mentalhealth",
+    name: "Dr. Hannah Wong",
+    specialty: "Mental Health (Psychiatry & Therapy)",
+    address: "Fremont Mind Clinic, 3601 Fremont Ave N, Seattle",
+    phone: "206-555-0255",
+    defaultAppointmentType: "Mental health consultation",
+  },
   "kim-primary": {
     id: "kim-primary",
     name: "Dr. Jordan Kim",
     specialty: "Primary Care",
     address: "Kim Family Medicine, 1240 12th Ave, Seattle",
     phone: "206-555-0199",
+    defaultAppointmentType: "Primary care visit",
+  },
+  "sato-primary": {
+    id: "sato-primary",
+    name: "Dr. Riku Sato",
+    specialty: "Primary Care",
+    address: "Greenwood Family Health, 8500 Greenwood Ave N, Seattle",
+    phone: "206-555-0266",
     defaultAppointmentType: "Primary care visit",
   },
 };

@@ -3,6 +3,9 @@ import { useAppState, useAppActions } from "../../state/store.jsx";
 import { registerPatient } from "../../lib/api.js";
 import IdentityStep from "./IdentityStep.jsx";
 import AccessibilityStep from "./AccessibilityStep.jsx";
+import InsuranceStep from "./InsuranceStep.jsx";
+
+const TOTAL_STEPS = 3;
 
 const EMPTY_IDENTITY = {
   firstName: "",
@@ -10,7 +13,11 @@ const EMPTY_IDENTITY = {
   dateOfBirth: "",
   email: "",
   phone: "",
-  address: "",
+  street: "",
+  city: "",
+  state: "",
+  zip: "",
+  country: "",
 };
 
 const EMPTY_ACCESSIBILITY = {
@@ -22,8 +29,31 @@ const EMPTY_ACCESSIBILITY = {
   notes: "",
 };
 
+const EMPTY_INSURANCE = { provider: "" };
+
+const STEP_HEADERS = {
+  1: {
+    title: "Your information",
+    subtitle: "Your name, contact, and where you live.",
+  },
+  2: {
+    title: "How you'd like to be supported",
+    subtitle: "These help clinics communicate with you. Change them any time.",
+  },
+  3: {
+    title: "Insurance",
+    subtitle: "Pick your provider. You can update this later.",
+  },
+};
+
 function patientToFormValues(patient) {
-  if (!patient) return { identity: EMPTY_IDENTITY, accessibility: EMPTY_ACCESSIBILITY };
+  if (!patient) {
+    return {
+      identity: EMPTY_IDENTITY,
+      accessibility: EMPTY_ACCESSIBILITY,
+      insurance: EMPTY_INSURANCE,
+    };
+  }
   return {
     identity: {
       firstName: patient.firstName ?? "",
@@ -31,9 +61,14 @@ function patientToFormValues(patient) {
       dateOfBirth: patient.dateOfBirth ?? "",
       email: patient.email ?? "",
       phone: patient.phone ?? "",
-      address: patient.address ?? "",
+      street: patient.street ?? "",
+      city: patient.city ?? "",
+      state: patient.state ?? "",
+      zip: patient.zip ?? "",
+      country: patient.country ?? "",
     },
     accessibility: { ...EMPTY_ACCESSIBILITY, ...(patient.accessibilityProfile ?? {}) },
+    insurance: { provider: patient.insurance ?? "" },
   };
 }
 
@@ -52,32 +87,45 @@ function validateIdentity(identity) {
   return errors;
 }
 
+function clampStep(n) {
+  if (n < 1) return 1;
+  if (n > TOTAL_STEPS) return TOTAL_STEPS;
+  return n;
+}
+
 export default function AccountModal() {
   const { patient, accountModalStartStep } = useAppState();
   const { setPatient, closeAccountModal } = useAppActions();
 
   const initial = patientToFormValues(patient);
-  const [step, setStep] = useState(accountModalStartStep);
+  const [step, setStep] = useState(clampStep(accountModalStartStep));
   const [identity, setIdentity] = useState(initial.identity);
   const [accessibility, setAccessibility] = useState(initial.accessibility);
+  const [insurance, setInsurance] = useState(initial.insurance);
   const [identityErrors, setIdentityErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const containerRef = useRef(null);
 
   useEffect(() => {
-    setStep(accountModalStartStep);
+    setStep(clampStep(accountModalStartStep));
   }, [accountModalStartStep]);
 
   useEffect(() => {
-    const el = containerRef.current?.querySelector("input, textarea, button");
+    const el = containerRef.current?.querySelector("input, textarea, select, button");
     el?.focus();
   }, [step]);
 
   function handleNext() {
-    const errs = validateIdentity(identity);
-    setIdentityErrors(errs);
-    if (Object.keys(errs).length === 0) setStep(2);
+    if (step === 1) {
+      const errs = validateIdentity(identity);
+      setIdentityErrors(errs);
+      if (Object.keys(errs).length === 0) setStep(2);
+      return;
+    }
+    if (step === 2) {
+      setStep(3);
+    }
   }
 
   async function handleSubmit() {
@@ -86,6 +134,7 @@ export default function AccountModal() {
     const incomingPatient = {
       id: patient?.id,
       ...identity,
+      insurance: insurance.provider,
       preferredContactMethod: "email",
       accessibilityProfile: accessibility,
     };
@@ -101,6 +150,14 @@ export default function AccountModal() {
   }
 
   const isEditing = patient != null;
+  const header = STEP_HEADERS[step];
+  const isLastStep = step === TOTAL_STEPS;
+  const primaryLabel = submitting
+    ? "Saving…"
+    : isLastStep
+    ? isEditing ? "Save changes" : "Create account"
+    : "Next";
+  const primaryAction = isLastStep ? handleSubmit : handleNext;
 
   return (
     <div
@@ -111,31 +168,33 @@ export default function AccountModal() {
     >
       <div
         ref={containerRef}
-        className="bg-surface max-w-xl w-full rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+        className="bg-surface max-w-2xl w-full rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
       >
         <header className="px-8 pt-8 pb-4 border-b border-border-soft">
           <p className="m-0 text-sm uppercase tracking-wide text-ink-muted">
-            Step {step} of 2
+            Step {step} of {TOTAL_STEPS}
           </p>
           <h2 id="account-modal-title" className="m-0 mt-1 text-2xl text-ink">
-            {step === 1 ? "Your information" : "How you'd like to be supported"}
+            {header.title}
           </h2>
           <p className="m-0 mt-2 text-base text-ink-secondary">
-            {step === 1
-              ? "We use this to set up appointments and identify you to clinics."
-              : "Tell us a little about what works best for you. You can change these any time."}
+            {header.subtitle}
           </p>
         </header>
 
         <div className="px-8 py-6 overflow-y-auto">
-          {step === 1 ? (
+          {step === 1 && (
             <IdentityStep
               values={identity}
               onChange={setIdentity}
               errors={identityErrors}
             />
-          ) : (
+          )}
+          {step === 2 && (
             <AccessibilityStep values={accessibility} onChange={setAccessibility} />
+          )}
+          {step === 3 && (
+            <InsuranceStep values={insurance} onChange={setInsurance} />
           )}
 
           {submitError && (
@@ -154,40 +213,32 @@ export default function AccountModal() {
             >
               Cancel
             </button>
-          ) : (
+          ) : step === 1 ? (
             <span className="text-sm text-ink-muted">
               Your information is sent to your secure NeuroSync record.
             </span>
+          ) : (
+            <span />
           )}
 
           <div className="flex items-center gap-3">
-            {step === 2 && (
+            {step > 1 && (
               <button
                 type="button"
-                onClick={() => setStep(1)}
+                onClick={() => setStep(step - 1)}
                 className="px-5 py-3 rounded-full text-ink-secondary hover:bg-subtle transition-colors duration-200"
               >
                 Back
               </button>
             )}
-            {step === 1 ? (
-              <button
-                type="button"
-                onClick={handleNext}
-                className="px-6 py-3 rounded-full bg-accent text-accent-on hover:bg-accent-hover transition-colors duration-200"
-              >
-                Next
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={handleSubmit}
-                disabled={submitting}
-                className="px-6 py-3 rounded-full bg-accent text-accent-on hover:bg-accent-hover disabled:bg-subtle disabled:text-ink-muted transition-colors duration-200"
-              >
-                {submitting ? "Saving…" : isEditing ? "Save changes" : "Finish setup"}
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={primaryAction}
+              disabled={submitting}
+              className="px-7 py-3.5 rounded-full bg-accent text-accent-on hover:bg-accent-hover disabled:bg-subtle disabled:text-ink-muted transition-colors duration-200"
+            >
+              {primaryLabel}
+            </button>
           </div>
         </footer>
       </div>

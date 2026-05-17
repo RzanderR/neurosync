@@ -4,7 +4,7 @@ Four Lambdas, each exposed via a Lambda Function URL. No API Gateway. No DynamoD
 
 | Folder | Purpose | Calls Bedrock? | Frontend env var |
 |---|---|---|---|
-| `lambdas/recommend/` | Pick one of 6 providers (or null for out-of-scope requests) from free-text | Yes | `VITE_RECOMMEND_URL` |
+| `lambdas/recommend/` | Pick one of 12 providers (or null for out-of-scope requests) from free-text + patient insurance/zip | Yes | `VITE_RECOMMEND_URL` |
 | `lambdas/schedule/` | Return Path A booking or Path B email draft (path is randomized per call) | No | `VITE_SCHEDULE_URL` |
 | `lambdas/register/` | Generate patient ID, echo profile | No | `VITE_REGISTER_URL` |
 | `lambdas/rewrite/` | TBI-friendly message rewrite | Yes | `VITE_REWRITE_URL` |
@@ -89,42 +89,68 @@ Save. The console gives you a URL like `https://abc123xyz.lambda-url.us-west-2.o
 **Test** tab → **Create new event** → name it `test`. Use the appropriate event body below. Click **Test**.
 
 <details>
-<summary>recommend test event — neurology routing</summary>
+<summary>recommend — insurance match (Aetna, neurology)</summary>
 
 ```json
 {
   "requestContext": { "http": { "method": "POST" } },
-  "body": "{\"patient\":{\"firstName\":\"Sam\"},\"request\":\"I've been having post-concussion headaches for three weeks\"}"
+  "body": "{\"patient\":{\"firstName\":\"Sam\",\"insurance\":\"Aetna\",\"zip\":\"98122\",\"city\":\"Seattle\"},\"request\":\"I've been having post-concussion headaches for three weeks\"}"
 }
 ```
 
-Expected response body: `{"providerId":"chen-neurology","reasoning":"...","alternates":["...","..."]}`
+Expected: `{"providerId":"chen-neurology","reasoning":"...accepts Aetna...","alternates":[...]}`. Chen takes Aetna; Nguyen does not.
 </details>
 
 <details>
-<summary>recommend test event — speech routing</summary>
+<summary>recommend — alternate provider in same specialty (Medicare → Nguyen)</summary>
 
 ```json
 {
   "requestContext": { "http": { "method": "POST" } },
-  "body": "{\"patient\":{\"firstName\":\"Sam\"},\"request\":\"I'm having trouble finding the right words when I talk\"}"
+  "body": "{\"patient\":{\"firstName\":\"Sam\",\"insurance\":\"Medicare\",\"zip\":\"98125\",\"city\":\"Seattle\"},\"request\":\"I've been having post-concussion headaches for three weeks\"}"
 }
 ```
 
-Expected response body: `{"providerId":"okafor-speech","reasoning":"...","alternates":[...]}`
+Expected: `{"providerId":"nguyen-neurology","reasoning":"...accepts Medicare...","alternates":[...]}`. Nguyen takes Medicare; Chen does not.
 </details>
 
 <details>
-<summary>recommend test event — out-of-scope</summary>
+<summary>recommend — insurance mismatch, location fallback (Medicaid)</summary>
 
 ```json
 {
   "requestContext": { "http": { "method": "POST" } },
-  "body": "{\"patient\":{\"firstName\":\"Sam\"},\"request\":\"I think I broke my arm — I need a cast\"}"
+  "body": "{\"patient\":{\"firstName\":\"Sam\",\"insurance\":\"Medicaid\",\"zip\":\"98144\",\"city\":\"Seattle\"},\"request\":\"I've been having post-concussion headaches for three weeks\"}"
 }
 ```
 
-Expected response body: `{"providerId":null,"reasoning":"NeuroSync doesn't cover that yet...","alternates":[]}`
+Expected: a neurology pick (Chen or Nguyen) with reasoning that plainly says Medicaid isn't accepted and suggests verifying coverage. No neurology provider accepts Medicaid, so the model falls back to location.
+</details>
+
+<details>
+<summary>recommend — speech routing (insurance-aware)</summary>
+
+```json
+{
+  "requestContext": { "http": { "method": "POST" } },
+  "body": "{\"patient\":{\"firstName\":\"Sam\",\"insurance\":\"UnitedHealthcare\",\"zip\":\"98117\"},\"request\":\"I'm having trouble finding the right words when I talk\"}"
+}
+```
+
+Expected: `{"providerId":"lin-speech","reasoning":"...accepts UnitedHealthcare...","alternates":[...]}`.
+</details>
+
+<details>
+<summary>recommend — out-of-scope (no specialty fits)</summary>
+
+```json
+{
+  "requestContext": { "http": { "method": "POST" } },
+  "body": "{\"patient\":{\"firstName\":\"Sam\",\"insurance\":\"Aetna\"},\"request\":\"I think I broke my arm — I need a cast\"}"
+}
+```
+
+Expected: `{"providerId":null,"reasoning":"We don't have a provider for that yet — we're working on adding more soon...","alternates":[]}`.
 </details>
 
 <details>

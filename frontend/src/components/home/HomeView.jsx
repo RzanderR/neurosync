@@ -9,7 +9,7 @@ export default function HomeView() {
         <RemindersView compact />
       </section>
 
-      <section className="min-h-[24rem] lg:min-h-[28rem]">
+      <section className="h-[28rem] lg:h-[36rem]">
         <ChatView compact />
       </section>
 
